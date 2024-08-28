@@ -1,0 +1,69 @@
+services:
+  #our application
+  BlackFridayLoadTester:
+    build:
+      dockerfile: BlackFriday.LoadTester/Dockerfile
+      context: .
+    hostname: black-friday-load-tester
+    image: black-friday-load-tester
+    environment:
+      - LOADTESTER_BLACKFRIDAY_SERVER_URI=http://host.docker.internal:32768
+      - LOADTESTER_USERSCOUNT=50
+      - ASPNETCORE_HTTP_PORTS=80
+      - ASPNETCORE_URLS=http://*:80
+      - ASPNETCORE_ENVIRONMENT=Development  
+    ports:
+      - "127.0.0.1:32770:80"
+    networks:
+      - BlackFriday
+#______________________________________________________________________________________________________
+  #metrics
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - 9091:9091
+    restart: unless-stopped
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    networks:
+      - BlackFriday
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3001:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+    networks:
+      - BlackFriday
+
+#================================================================================================network
+networks:
+  BlackFriday:
+
+#================================================================================================volumes
+volumes:
+  #______________________________________________________________________________________________________
+  #metric
+  prom_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: "./prometheus_data"
+  grafana_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: "./grafana_data"
