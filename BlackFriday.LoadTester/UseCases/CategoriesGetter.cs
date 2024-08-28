@@ -15,7 +15,7 @@ internal class CategoriesGetter : ICategoriesGetter
 	public async Task<IReadOnlyCollection<string>> GetCategoriesAsync(CancellationToken cancellationToken)
 	{
 		using var httpClient = _httpClientFactory.CreateClient("black_friday");
-		var response = await httpClient.GetAsync($"categories/", cancellationToken);
+		var response = await httpClient.GetAsync($"categories", cancellationToken);
 		response.EnsureSuccessStatusCode();
 
 		return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<string>>(cancellationToken);
