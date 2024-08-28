@@ -2,6 +2,7 @@
 using BlackFriday.LoadTester.BackgroundServices.ScenarioExecution;
 using BlackFriday.LoadTester.BackgroundServices.ScenarioExecution.Abstraction;
 using BlackFriday.LoadTester.BackgroundServices.ScenarioExecution.LoadTestScenarios;
+using BlackFriday.LoadTester.Commons.Metrics;
 using BlackFriday.LoadTester.UseCases;
 using BlackFriday.LoadTester.UseCases.Abstraction;
 using OpenTelemetry.Metrics;
@@ -12,9 +13,11 @@ builder.Configuration.AddEnvironmentVariables("LOADTESTER_");
 
 builder.Services
 	.AddOpenTelemetry()
-	.WithMetrics(options => options.AddHttpClientInstrumentation()
-		.AddRuntimeInstrumentation()
-		.AddProcessInstrumentation()
+	.WithMetrics(options => options
+		.AddMeter("BlackFriday.LoadTester")
+		//.AddHttpClientInstrumentation()
+		//.AddRuntimeInstrumentation()
+		//.AddProcessInstrumentation()
 		.AddPrometheusExporter());
 
 builder.Services.AddHttpClient("black_friday", options =>
@@ -38,6 +41,8 @@ builder.Services.AddSingleton<ICategoriesItemsGetter, CategoriesItemsGetter>();
 builder.Services.AddSingleton<IItemsGetter, ItemsGetter>();
 builder.Services.AddSingleton<IBasketFiller, BasketFiller>();
 builder.Services.AddSingleton<IBasketCheckouter, BasketCheckouter>();
+
+builder.Services.AddSingleton<ApiCallMeter>();
 
 var app = builder.Build();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();

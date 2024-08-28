@@ -1,15 +1,20 @@
+using System.Diagnostics.Metrics;
 using System.Net.Http.Json;
+using BlackFriday.LoadTester.Commons.Metrics;
 using BlackFriday.LoadTester.UseCases.Abstraction;
 
 namespace BlackFriday.LoadTester.UseCases;
 
 internal class CategoriesItemsGetter : ICategoriesItemsGetter
 {
+	private const string RequestUri = "categories/{category}";
 	private readonly IHttpClientFactory _httpClientFactory;
+	private readonly ApiCallMeter _meter;
 
-	public CategoriesItemsGetter(IHttpClientFactory httpClientFactory)
+	public CategoriesItemsGetter(IHttpClientFactory httpClientFactory, ApiCallMeter meter)
 	{
 		_httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+		_meter = meter ?? throw new ArgumentNullException(nameof(meter));
 	}
 
 	public async Task<IReadOnlyCollection<string>> GetCategoriesItemsAsync(IReadOnlyCollection<string> categories, CancellationToken cancellationToken)
@@ -21,7 +26,16 @@ internal class CategoriesItemsGetter : ICategoriesItemsGetter
 		foreach (var category in randomCategories)
 		{
 			var response = await httpClient.GetAsync($"categories/{category}", cancellationToken);
-			response.EnsureSuccessStatusCode();
+			try
+			{
+				response.EnsureSuccessStatusCode();
+				_meter.CalledApiSuccessfully(RequestUri);
+			}
+			catch
+			{
+				_meter.ApiCallFailed(RequestUri);
+				throw;
+			}
 			var products = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<Product>>(cancellationToken);
 			itemIds.AddRange(products.Select(x => x.Asin));
 		}
