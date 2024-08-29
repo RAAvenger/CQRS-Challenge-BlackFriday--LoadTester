@@ -8,7 +8,7 @@ services:
     image: black-friday-load-tester
     environment:
       - LOADTESTER_BLACKFRIDAY_SERVER_URI=http://host.docker.internal:32768
-      - LOADTESTER_USERSCOUNT=50
+      - LOADTESTER_USERSCOUNT=5
       - ASPNETCORE_HTTP_PORTS=80
       - ASPNETCORE_URLS=http://*:80
       - ASPNETCORE_ENVIRONMENT=Development  
